@@ -1,0 +1,19 @@
+Purpose and Impact
+
+  The purpose of our project is to organize music for people who have unorganized music. CD rips and questionably downloaded music files tend to lack the metadata that allows it to be displayed nicely in music players like iTunes and cmus. "Untitled Track 01" is not an acceptable solution to a lack of metadata. This project seeks to use AcoustId's Chromaprint library to fingerprint audio files and query for relevant metadata. The program will then insert the metadata in the correct format, and rename the file according to a predetermined form.
+
+How does it span the two key areas
+
+  Mapping the fingerprinting functionality over the entire input directory implies an embarrassingly parallel pipeline. We will integrate concurrency at the lowest level and thus satisfy the "Concurrency on the CPU" core area.
+
+  Our project demonstrates our understanding of persistence through creation and modification of audio files and hierarchical directories. Thus, we satisfy the "Persistence" core area.
+
+Rough Implementation Plan
+
+  1. Read FLAC files from input directory.
+  2. Fingerprint the files in parallel.
+  3. Use audio fingerprints to query metadata from the AcoustId service. 
+  4. Insert metadata into FLAC files using Vorbis comments.
+  5. Output correctly-labelled files into output directory, organized in a defined way.
+
+
