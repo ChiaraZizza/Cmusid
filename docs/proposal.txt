@@ -12,8 +12,12 @@ Rough Implementation Plan
 
   1. Read FLAC files from input directory.
   2. Fingerprint the files in parallel.
+    * Using the `chromaprint` wrapper crate, we can generate AcoustId fingerprints which can be used in step 3. These first two steps are embarassingly parallel.  
   3. Use audio fingerprints to query metadata from the AcoustId service. 
+    * We will use a Rust HTTP client crate to communicate and a JSON parsing crate to interpret the response
   4. Insert metadata into FLAC files using Vorbis comments.
+    * Unlike MP3 files, which conventionally use ID3 tags for metadata, FLAC should use Vorbis comments to store information like artist, album, track name, and album cover.
   5. Output correctly-labelled files into output directory, organized in a defined way.
-
-
+    * In its simpliest form, we can output all files into one directory in the form `%artist-%album-%track.flac`
+    * If time permits, we would want to make a config file which would allow a user to specify their organizational scheme
+    * Sub-directories would also be nice, e.g. `%artist -> (%year) %album -> %tracknumber_%trackname`
