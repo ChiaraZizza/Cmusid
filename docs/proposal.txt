@@ -2,22 +2,15 @@ Purpose and Impact
 
   The purpose of our project is to organize music for people who have unorganized music. CD rips and questionably downloaded music files tend to lack the metadata that allows it to be displayed nicely in music players like iTunes and cmus. "Untitled Track 01" is not an acceptable solution to a lack of metadata. This project seeks to use AcoustId's Chromaprint library to fingerprint audio files and query for relevant metadata. The program will then insert the metadata in the correct format, and rename the file according to a predetermined form.
 
-How does it span the two key areas
+  The impact of Pan (the Greek God of Rustic Music) will be significant. Music organization is not a new problem, but creating an open source program in Rust will provide an opportunity for a strong community focused on making it easier for hobbyists to focus on the acquisition of their collection, rather than the tedious organization of it.
 
-  Mapping the fingerprinting functionality over the entire input directory implies an embarrassingly parallel pipeline. We will integrate concurrency at the lowest level and thus satisfy the "Concurrency on the CPU" core area.
+Relevance to Core Areas
 
-  Our project demonstrates our understanding of persistence through creation and modification of audio files and hierarchical directories. Thus, we satisfy the "Persistence" core area.
+  Mapping AcoustId's fingerprinting function over each file in the input directory implies an embarrassingly parallel pipeline. Thus, we will integrate concurrency at the lowest level, satisfying the requirements for the "Concurrency on the CPU" core area. We will need to consider race conditions and atomicity as we move from this embarrassingly parallel stage into the necessarily serial network communications stage.
 
-Rough Implementation Plan
+  Our project demonstrates our understanding of persistence through creation and modification of audio files and hierarchical directories. We will first find and read files in a given directory, and use their contents as a parameter for our fingerprinting library. Next, we will append the retrieved metadata to the corresponding input file. After this step, we will move or copy the processed file to an output directory. Given that we will create, modify, and save files, we will satisfy the requirements for the "Persistence" core area.
 
-  1. Read FLAC files from input directory.
-  2. Fingerprint the files in parallel.
-    * Using the `chromaprint` wrapper crate, we can generate AcoustId fingerprints which can be used in step 3. These first two steps are embarassingly parallel.  
-  3. Use audio fingerprints to query metadata from the AcoustId service. 
-    * We will use a Rust HTTP client crate to communicate and a JSON parsing crate to interpret the response
-  4. Insert metadata into FLAC files using Vorbis comments.
-    * Unlike MP3 files, which conventionally use ID3 tags for metadata, FLAC should use Vorbis comments to store information like artist, album, track name, and album cover.
-  5. Output correctly-labelled files into output directory, organized in a defined way.
-    * In its simpliest form, we can output all files into one directory in the form `%artist-%album-%track.flac`
-    * If time permits, we would want to make a config file which would allow a user to specify their organizational scheme
-    * Sub-directories would also be nice, e.g. `%artist -> (%year) %album -> %tracknumber_%trackname`
+Implementation Plan
+
+  We will implement Pan in four steps: File Reading, File Processing, Metadata Querying, and File Writing. File reading and processing are embarrassingly parallel, and thus will be done concurrently. We will use Rust's native file operations to read the FLAC files from the input directory and, using a rust "Crate" (package) which wraps around AcoustId's Chromaprint C library, generate a hashed audio fingerprint which can be sent via HTTP query to the AcoustId database lookup service.
+  We will send this fingerprint to the service, which will provide the song's name, album, and artist, if available. Unlike MP3 files, which conventionally use ID3 tags for metadata, FLAC files should use Vorbis comments to store information like this. Thus, our next step will be to add Vorbis comments with the information from the database. Lastly, the updated file will be either moved or copied to a predetermined output directory in a sane way. In its simplest form, we can output all files into one directory in the form `%artist-%album-%track.flac`. If time permits, we would make a config file allowing a user to specify their own organizational scheme. Sub-directories would also be nice, e.g. `%artist -> (%year) %album -> %tracknumber_%trackname`.
