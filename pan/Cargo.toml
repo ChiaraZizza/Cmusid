@@ -1,7 +1,0 @@
-[package]
-name = "pan"
-version = "0.1.0"
-authors = ["Alex Mitchell <alex@alexthemitchell.com>"]
-
-[dependencies]
-chromaprint = "0.1.2"
