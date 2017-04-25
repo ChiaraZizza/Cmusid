@@ -2,6 +2,10 @@
 #include <stdlib.h>
 #include <chromaprint.h>
 
+/*
+ * clang main.c -L chromaprint-1.4.2/src/ -I chromaprint-1.4.2/src/ -lchromaprint
+ * LD_LIBRARY_PATH=chromaprint-1.4.2/src ./a.out 
+ */
 const int sample_rate = 44100;
 const int num_channels = 2;
 const int FILE_BLOCK_SIZE = 2;
