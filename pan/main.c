@@ -15,18 +15,21 @@ void fingerprintFile(FILE *file) {
   while (fread(buffer,FILE_BLOCK_SIZE, 1, file)) {
     chromaprint_feed(ctx,buffer,FILE_BLOCK_SIZE);
   }
+
   chromaprint_finish(ctx);
 
   char *fingerprint;
   chromaprint_get_fingerprint(ctx, &fingerprint);
   printf("%s\n", fingerprint);
 
+  free(buffer);
   chromaprint_free(ctx);
 }
 
 int main () {
   FILE *file;
-  file = fopen("", "r");
+  file = fopen("input/truth.flac", "r");
   fingerprintFile(file);
+  fclose(file);
   return 0;
 }
