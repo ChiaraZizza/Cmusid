@@ -38,6 +38,7 @@ void fingerprintFile(FILE *file, char** fingerprint, int* duration) {
 }
 
 void fetchMetadata(char* fingerprint, int duration) {
+  printf("Fetching Metadata...\n | Duration: %d\n | Fingerprint: %s\n",duration, fingerprint);
   CURL *curl = curl_easy_init();
   if(curl) {
     CURLcode res;
@@ -51,6 +52,7 @@ void fetchMetadata(char* fingerprint, int duration) {
       fprintf(stderr, "curl_easy_perform() failed: %s\n",
               curl_easy_strerror(res));
     curl_easy_cleanup(curl);
+    free(body);
   } else {
     fprintf(stderr, "Error Initializing cURL");
   }
@@ -58,9 +60,9 @@ void fetchMetadata(char* fingerprint, int duration) {
 }
 
 
-int main () {
+int main (int argc, char *argv[]) {
   FILE *file;
-  file = fopen("input/truth.flac", "r");
+  file = fopen(argv[1], "r");
   char *fingerprint;
   int duration;
   fingerprintFile(file, &fingerprint, &duration);
