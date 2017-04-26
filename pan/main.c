@@ -42,7 +42,10 @@ void fetchMetadata(char* fingerprint, int duration) {
   if(curl) {
     CURLcode res;
     curl_easy_setopt(curl, CURLOPT_URL, ACOUSTID_API_URL);
-    curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
+    char *body;
+    asprintf(&body,"client=%s&duration=%d&fingerprint=%s", APPLICATION_ID, duration, fingerprint);
+    curl_easy_setopt(curl, CURLOPT_POSTFIELDS, body);
+
     res = curl_easy_perform(curl);
     if(res != CURLE_OK)
       fprintf(stderr, "curl_easy_perform() failed: %s\n",
