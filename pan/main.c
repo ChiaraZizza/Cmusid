@@ -1,15 +1,16 @@
 #define _GNU_SOURCE
 
+#include <assert.h>
 #include <chromaprint.h>
 #include <curl/curl.h>
+#include <dirent.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <pthread.h>
-#include <dirent.h>
 
 typedef struct FileNode {
-  FILE file;
+  FILE *file;
   char* filename;
   char* fingerprint;
   int duration;
@@ -28,7 +29,7 @@ const int FILE_BLOCK_SIZE = 128;
 const char* ACOUSTID_API_URL = "http://api.acoustid.org/v2/lookup";
 const char* APPLICATION_ID = "jif76R78Wd";
 
-void fingerprintFile(FILE *file, char** fingerprint, int* duration) {
+int fingerprintFile(FILE *file, char* fingerprint) {
   ChromaprintContext *ctx;
   ctx = chromaprint_new(CHROMAPRINT_ALGORITHM_DEFAULT);
 
@@ -47,10 +48,11 @@ void fingerprintFile(FILE *file, char** fingerprint, int* duration) {
     exit(2);
   }
   free(buffer);
-
-  chromaprint_get_fingerprint(ctx, fingerprint);
-  *duration = chromaprint_get_item_duration(ctx);
+  chromaprint_get_fingerprint(ctx, &fingerprint);
+  int duration = chromaprint_get_item_duration(ctx);
   chromaprint_free(ctx);
+
+  return duration;
 }
 
 void fetchMetadata(char* fingerprint, int duration) {
@@ -74,7 +76,7 @@ void fetchMetadata(char* fingerprint, int duration) {
   }
 }
 
-int consumeDirectory(char* directory, FileNode** flacFiles) {
+int consumeDirectory(char* directory, FileNode_t** flacFiles) {
   DIR *d = opendir(directory);
   int numFiles = 0;
   struct dirent *dir;
@@ -87,12 +89,20 @@ int consumeDirectory(char* directory, FileNode** flacFiles) {
 
   int i = 0;
   d = opendir(directory);
-  flacFile = (FileNode_t*) malloc(sizeof(FileNode_t)*numFiles);
+  *flacFiles = malloc(sizeof(FileNode_t*) * numFiles);
   while ((dir = readdir(d)) != NULL) {
-    ret[i]->file = fopen(dir->d_name, "r");
-    ret[i]->filename = dir->d_name;
-    i++;
+    if (strstr(dir->d_name, ".flac") != NULL) {
+      FileNode_t *node = malloc(sizeof(FileNode_t));
+      flacFiles[i] = node;
+      char* pathname;
+      asprintf(&pathname, "%s/%s", directory, dir->d_name);
+      FILE *file = fopen(pathname, "r");
+      node->file = file;
+      node->filename = dir->d_name;
+      i++;
+    }
   }
+  assert(numFiles == i);
 
   return numFiles;
 }
@@ -100,20 +110,22 @@ int consumeDirectory(char* directory, FileNode** flacFiles) {
 void* threadFunction (void* voidArgs) {
   arg_t* args = (arg_t*) voidArgs;
   for (int i = args->threadNo; i < args->totalNumFiles; i+= NO_THREADS) {
-    FileNode_t* cur = args->arr[i];
-    fingerprintFile(cur->file, cur->fingerprint, cur->duration);
+    FileNode_t *cur = &(args->arr[i]);
+    cur->duration = fingerprintFile(cur->file,cur->fingerprint);
   }
+  return NULL;
 }
 
 int main (int argc, char *argv[]) {
   FileNode_t* flacFiles;
-  int totalNumFiles = consumeDirectory(argv[1], FileNode_t* flacFiles);
+  int totalNumFiles = consumeDirectory(argv[1], &flacFiles);
   char *fingerprint;
   int duration;
 
   pthread_t threads[NO_THREADS];
   for (int i = 0; i < NO_THREADS; i++) {
-    arg_t arg = (arg_t*) malloc(sizeof(arg_t));
+    arg_t *arg = (arg_t*) malloc(sizeof(arg_t));
+    arg->totalNumFiles = totalNumFiles;
     arg->threadNo = i;
     if (pthread_create(&(threads[i]), NULL, threadFunction, arg)) {
       perror("Error creating thread");
@@ -126,7 +138,8 @@ int main (int argc, char *argv[]) {
     }
   }
   for(int i = 0; i < totalNumFiles; i++) {
-   // print files or something lol  
+    FileNode_t *node = &flacFiles[i];
+    printf("File: %s\n | Fingerprint: %s\n\n",node->filename, node->fingerprint);
   }
   return 0;
 }
