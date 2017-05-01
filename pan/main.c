@@ -36,8 +36,10 @@ int fingerprintFile(FILE *file, char* fingerprint) {
   chromaprint_start(ctx,sample_rate,num_channels);
 
   int16_t *buffer = (int16_t*) malloc((FILE_BLOCK_SIZE * sizeof(int16_t)));
-  while (fread(buffer,FILE_BLOCK_SIZE, 1, file)) {
-    if(!chromaprint_feed(ctx,buffer,FILE_BLOCK_SIZE)) {
+  
+  int read;
+  while (read = fread(buffer,FILE_BLOCK_SIZE * sizeof(int16_t), 1, file)) {
+    if(!chromaprint_feed(ctx,buffer,read/sizeof(int16_t))) {
       fprintf(stderr, "Error feeding Chromaprint from buffer");
       exit(2);
     }
@@ -89,14 +91,14 @@ int consumeDirectory(char* directory, FileNode_t** flacFiles) {
 
   int i = 0;
   d = opendir(directory);
-  *flacFiles = malloc(sizeof(FileNode_t*) * numFiles);
+  *flacFiles = malloc(sizeof(FileNode_t) * numFiles);
   while ((dir = readdir(d)) != NULL) {
     if (strstr(dir->d_name, ".flac") != NULL) {
-      FileNode_t *node = malloc(sizeof(FileNode_t));
-      flacFiles[i] = node;
+      FileNode_t *node = flacFiles[i];
       char* pathname;
       asprintf(&pathname, "%s/%s", directory, dir->d_name);
       FILE *file = fopen(pathname, "r");
+      fprintf(stderr, "file is %p\n", file);
       node->file = file;
       node->filename = dir->d_name;
       i++;
