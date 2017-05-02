@@ -98,7 +98,6 @@ FileNode_t* consumeDirectory(char* directory, int *filecount) {
       char* pathname;
       asprintf(&pathname, "%s/%s", directory, dir->d_name);
       FILE *file = fopen(pathname, "r");
-      fprintf(stderr, "file is %p\n", file);
       node->file = file;
       node->filename = dir->d_name;
       i++;
