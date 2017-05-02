@@ -4,7 +4,6 @@
 #include <chromaprint.h>
 #include <curl/curl.h>
 #include <dirent.h>
-#include <FLAC/metadata.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -37,9 +36,9 @@ int fingerprintFile(FILE *file, char* fingerprint) {
   chromaprint_start(ctx,sample_rate,num_channels);
 
   int16_t *buffer = (int16_t*) malloc((FILE_BLOCK_SIZE * sizeof(int16_t)));
-  
+
   int read;
-  while (read = fread(buffer,FILE_BLOCK_SIZE * sizeof(int16_t), 1, file)) {
+  while ((read = fread(buffer,FILE_BLOCK_SIZE * sizeof(int16_t), 1, file))) {
     if(!chromaprint_feed(ctx,buffer,read/sizeof(int16_t))) {
       fprintf(stderr, "Error feeding Chromaprint from buffer");
       exit(2);
@@ -95,7 +94,7 @@ FileNode_t* consumeDirectory(char* directory, int *filecount) {
   FileNode_t *flacFiles = malloc(sizeof(FileNode_t) * (*filecount));
   while ((dir = readdir(d)) != NULL) {
     if (strstr(dir->d_name, ".flac") != NULL) {
-      FileNode_t *node = &flacFiles[i*sizeof(FileNode_t)];
+      FileNode_t *node = &flacFiles[i];
       char* pathname;
       asprintf(&pathname, "%s/%s", directory, dir->d_name);
       FILE *file = fopen(pathname, "r");
@@ -113,7 +112,7 @@ FileNode_t* consumeDirectory(char* directory, int *filecount) {
 void* threadFunction (void* voidArgs) {
   arg_t* args = (arg_t*) voidArgs;
   for (int i = args->threadNo; i < args->totalNumFiles; i+= NO_THREADS) {
-    FileNode_t *cur = &(args->arr)[i*sizeof(FileNode_t)];
+    FileNode_t *cur = &(args->arr)[i];
     cur->duration = fingerprintFile(cur->file,cur->fingerprint);
   }
   return NULL;
