@@ -4,6 +4,7 @@
 #include <chromaprint.h>
 #include <curl/curl.h>
 #include <dirent.h>
+#include <FLAC/metadata.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -78,23 +79,23 @@ void fetchMetadata(char* fingerprint, int duration) {
   }
 }
 
-int consumeDirectory(char* directory, FileNode_t** flacFiles) {
+FileNode_t* consumeDirectory(char* directory, int *filecount) {
   DIR *d = opendir(directory);
-  int numFiles = 0;
   struct dirent *dir;
+  *filecount = 0;
   while ((dir = readdir(d)) != NULL) {
     if (strstr(dir->d_name, ".flac") != NULL) {
-      numFiles++;
+      (*filecount)++;
     }
   }
   closedir(d);
 
   int i = 0;
   d = opendir(directory);
-  *flacFiles = malloc(sizeof(FileNode_t) * numFiles);
+  FileNode_t *flacFiles = malloc(sizeof(FileNode_t) * (*filecount));
   while ((dir = readdir(d)) != NULL) {
     if (strstr(dir->d_name, ".flac") != NULL) {
-      FileNode_t *node = flacFiles[i];
+      FileNode_t *node = &flacFiles[i*sizeof(FileNode_t)];
       char* pathname;
       asprintf(&pathname, "%s/%s", directory, dir->d_name);
       FILE *file = fopen(pathname, "r");
@@ -104,29 +105,30 @@ int consumeDirectory(char* directory, FileNode_t** flacFiles) {
       i++;
     }
   }
-  assert(numFiles == i);
+  assert(*filecount == i);
 
-  return numFiles;
+  return flacFiles;
 }
 
 void* threadFunction (void* voidArgs) {
   arg_t* args = (arg_t*) voidArgs;
   for (int i = args->threadNo; i < args->totalNumFiles; i+= NO_THREADS) {
-    FileNode_t *cur = &(args->arr[i]);
+    FileNode_t *cur = &(args->arr)[i*sizeof(FileNode_t)];
     cur->duration = fingerprintFile(cur->file,cur->fingerprint);
   }
   return NULL;
 }
 
 int main (int argc, char *argv[]) {
-  FileNode_t* flacFiles;
-  int totalNumFiles = consumeDirectory(argv[1], &flacFiles);
+  int totalNumFiles;
+  FileNode_t *flacFiles = consumeDirectory(argv[1], &totalNumFiles);
   char *fingerprint;
   int duration;
 
   pthread_t threads[NO_THREADS];
   for (int i = 0; i < NO_THREADS; i++) {
     arg_t *arg = (arg_t*) malloc(sizeof(arg_t));
+    arg->arr = flacFiles;
     arg->totalNumFiles = totalNumFiles;
     arg->threadNo = i;
     if (pthread_create(&(threads[i]), NULL, threadFunction, arg)) {
