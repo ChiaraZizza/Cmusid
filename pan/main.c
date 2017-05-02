@@ -29,7 +29,7 @@ const int FILE_BLOCK_SIZE = 128;
 const char* ACOUSTID_API_URL = "http://api.acoustid.org/v2/lookup";
 const char* APPLICATION_ID = "jif76R78Wd";
 
-int fingerprintFile(FILE *file, char* fingerprint) {
+int fingerprintFile(FILE *file, char** fingerprint) {
   ChromaprintContext *ctx;
   ctx = chromaprint_new(CHROMAPRINT_ALGORITHM_DEFAULT);
 
@@ -50,7 +50,7 @@ int fingerprintFile(FILE *file, char* fingerprint) {
     exit(2);
   }
   free(buffer);
-  chromaprint_get_fingerprint(ctx, &fingerprint);
+  chromaprint_get_fingerprint(ctx, fingerprint);
   int duration = chromaprint_get_item_duration(ctx);
   chromaprint_free(ctx);
 
@@ -112,7 +112,7 @@ void* threadFunction (void* voidArgs) {
   arg_t* args = (arg_t*) voidArgs;
   for (int i = args->threadNo; i < args->totalNumFiles; i+= NO_THREADS) {
     FileNode_t *cur = &(args->arr)[i];
-    cur->duration = fingerprintFile(cur->file,cur->fingerprint);
+    cur->duration = fingerprintFile(cur->file,&cur->fingerprint);
   }
   return NULL;
 }
@@ -141,7 +141,7 @@ int main (int argc, char *argv[]) {
   }
   for(int i = 0; i < totalNumFiles; i++) {
     FileNode_t *node = &flacFiles[i];
-    printf("File: %s\n | Fingerprint: %s\n\n",node->filename, node->fingerprint);
+    printf("File: %s\n | Duration: %d\n | Fingerprint: %s\n\n",node->filename, node->duration, node->fingerprint);
   }
   return 0;
 }
