@@ -35,23 +35,25 @@ int fingerprintFile(FILE *file, char** fingerprint) {
 
   chromaprint_start(ctx,sample_rate,num_channels);
 
-  int16_t *buffer = (int16_t*) malloc((FILE_BLOCK_SIZE * sizeof(int16_t)));
-
+ int16_t *buffer = (int16_t*) malloc((FILE_BLOCK_SIZE * sizeof(int16_t)));
   int read;
-  while ((read = fread(buffer,FILE_BLOCK_SIZE * sizeof(int16_t), 1, file))) {
+  while ((read = fread(buffer,FILE_BLOCK_SIZE*sizeof(int16_t), 1, file))) {
     if(!chromaprint_feed(ctx,buffer,read/sizeof(int16_t))) {
-      fprintf(stderr, "Error feeding Chromaprint from buffer");
+      fprintf(stderr, "Error feeding Chromaprint from buffer\n");
       exit(2);
     }
   }
 
   if (!chromaprint_finish(ctx)) {
-    fprintf(stderr, "Error feeding Chromaprint from buffer");
+    fprintf(stderr, "Error finishing Chromaprint feed\n");
     exit(2);
   }
   free(buffer);
-  chromaprint_get_fingerprint(ctx, fingerprint);
-  int duration = chromaprint_get_item_duration(ctx);
+  if (!chromaprint_get_fingerprint(ctx, fingerprint)) {
+    fprintf(stderr, "Error retrieving fingerprint from Chromaprint\n");
+    exit(2);
+  }
+  int duration = chromaprint_get_item_duration_ms(ctx);
   chromaprint_free(ctx);
 
   return duration;
