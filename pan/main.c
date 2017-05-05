@@ -8,6 +8,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <pthread.h>
+#include <stdbool.h>
+#include <FLAC/Metadata.h>
 
 typedef struct FileNode {
   FILE *file;
@@ -21,6 +23,8 @@ typedef struct arg {
   int threadNo;
   int totalNumFiles;
 } arg_t;
+
+typedef FLAC__StreamMetadata data;
 
 #define NO_THREADS 4
 const int sample_rate = 44100;
@@ -120,6 +124,8 @@ void* threadFunction (void* voidArgs) {
 }
 
 int main (int argc, char *argv[]) {
+
+  /*
   int totalNumFiles;
   FileNode_t *flacFiles = consumeDirectory(argv[1], &totalNumFiles);
   char *fingerprint;
@@ -145,5 +151,97 @@ int main (int argc, char *argv[]) {
     FileNode_t *node = &flacFiles[i];
     printf("File: %s\n | Duration: %d\n | Fingerprint: %s\n\n",node->filename, node->duration, node->fingerprint);
   }
+  */
+
+  // check if valid file
+  // create a flac iterator
+  FLAC__Metadata_SimpleIterator *flac_iter = FLAC__metadata_simple_iterator_new();
+
+  // Attach iterator to a FLAC file (this function returns a flac bool)
+  if (!FLAC__metadata_simple_iterator_init(flac_iter, "input/cool.flac", false, false)) {
+    // error message
+  }
+
+  // make sure the file is writable
+  if (!FLAC__metadata_simple_iterator_is_writable(flac_iter)) {
+    // error? flac isn't writable
+    // print something, then exit
+  }
+
+  // iterate while there are blocks to read
+  while (FLAC__metadata_simple_iterator_next(flac_iter)) {
+    FLAC__StreamMetadata* meta = FLAC__metadata_simple_iterator_get_block(flac_iter);
+    FLAC__StreamMetadata* temp = FLAC__metadata_object_new (FLAC__METADATA_TYPE_VORBIS_COMMENT);
+    //printf("meta contents: %u\n", meta->type);
+    if(meta->type == FLAC__METADATA_TYPE_VORBIS_COMMENT) {
+      FLAC__StreamMetadata_VorbisComment vorbis = meta->data.vorbis_comment;
+      for(int i = 0; i < vorbis.num_comments; i++) {
+	//printf("%s\n", vorbis.comments[i].entry);
+      }
+    }
+
+    FLAC__StreamMetadata_VorbisComment fill = temp->data.vorbis_comment;
+
+    //create vorbis entry and populate it
+    FLAC__StreamMetadata_VorbisComment_Entry* t = (FLAC__StreamMetadata_VorbisComment_Entry*)
+      malloc(sizeof(FLAC__StreamMetadata_VorbisComment_Entry));
+    char* title = (char*)malloc(sizeof(char) * 20);
+    title = "TITLE";
+    memcpy(t, title, 10);
+    
+    //returns FLAC__bool
+    //FLAC__metadata_object_vorbiscomment_replace_comment(temp, *t, false, false);
+
+
+
+    //gdb
+    //print temp->data.vorbis_comment
+
+
+
+
+
+
+    
+
+    //populate field
+    
+    title = "Title";
+    FLAC__byte* z = malloc(sizeof(char) * 20);// = x;
+    memcpy(z, title, 10);
+
+    FLAC__metadata_object_application_set_data(temp, z, 20, false);
+    //FLAC__metadata_object_vorbiscomment_set_comment(temp, 0, *t, false);
+    
+
+    
+    //fill.comments[0] = malloc(sizeof(FLAC__StreamMetadata_VorbisComment_Entry));
+    //a = fill.comments[0].entry;
+    //memcpy(fill.comments[0].entry, title, 20);
+
+    //fill.comments[0].entry = title;
+    //a = malloc(sizeof(char) * 20);
+    //memcpy(a, title, 20);
+
+    //increment num_comments
+    fill.num_comments = 1;
+    
+    for(int i = 0; i < fill.num_comments; i++) {
+      printf("%s\n", fill.vendor_string);
+    }
+
+    //TESTING
+    /*
+    char* x = (char*)malloc(sizeof(char) * 20);
+    x = "string";
+    FLAC__byte* b = malloc(sizeof(char) * 20);// = x;
+    memcpy(b, x, 10);
+    //printf("String: %s\nByte: %d\n", x, b);
+    */
+
+    //pass in three paramaters to function:
+    //want TITLE, ARTIST, ALBUM
+    //FLAC__metadata_simple_iterator_set_block(flac_iter, temp, true);
+ }
   return 0;
 }
