@@ -10,7 +10,6 @@
 #include <pthread.h>
 
 typedef struct FileNode {
-  FILE *file;
   char* filename;
   char* fingerprint;
   int duration;
@@ -29,34 +28,36 @@ const int FILE_BLOCK_SIZE = 128;
 const char* ACOUSTID_API_URL = "http://api.acoustid.org/v2/lookup";
 const char* APPLICATION_ID = "jif76R78Wd";
 
-int fingerprintFile(FILE *file, char** fingerprint) {
+int fingerprintFile(char* filePath, char** fingerprint) {
+  FILE *file = fopen(filePath, "r");
   ChromaprintContext *ctx;
   ctx = chromaprint_new(CHROMAPRINT_ALGORITHM_DEFAULT);
 
   chromaprint_start(ctx,sample_rate,num_channels);
 
  int16_t *buffer = (int16_t*) malloc((FILE_BLOCK_SIZE * sizeof(int16_t)));
+  int samples;
   int read;
-  while ((read = fread(buffer,FILE_BLOCK_SIZE*sizeof(int16_t), 1, file))) {
-    if(!chromaprint_feed(ctx,buffer,read/sizeof(int16_t))) {
+  while ((read = fread(buffer,FILE_BLOCK_SIZE * sizeof(int16_t), 1, file))) {
+    if(!chromaprint_feed(ctx,buffer,FILE_BLOCK_SIZE)) {
       fprintf(stderr, "Error feeding Chromaprint from buffer\n");
       exit(2);
     }
+    samples += chromaprint_get_item_duration(ctx);
   }
 
   if (!chromaprint_finish(ctx)) {
     fprintf(stderr, "Error finishing Chromaprint feed\n");
     exit(2);
   }
+  fclose(file);
   free(buffer);
   if (!chromaprint_get_fingerprint(ctx, fingerprint)) {
     fprintf(stderr, "Error retrieving fingerprint from Chromaprint\n");
     exit(2);
   }
-  int duration = chromaprint_get_item_duration_ms(ctx);
   chromaprint_free(ctx);
-
-  return duration;
+  return (samples * 1.0) / sample_rate;
 }
 
 void fetchMetadata(char* fingerprint, int duration) {
@@ -96,12 +97,10 @@ FileNode_t* consumeDirectory(char* directory, int *filecount) {
   FileNode_t *flacFiles = malloc(sizeof(FileNode_t) * (*filecount));
   while ((dir = readdir(d)) != NULL) {
     if (strstr(dir->d_name, ".flac") != NULL) {
-      FileNode_t *node = &flacFiles[i];
+      FileNode_t* node = &(flacFiles[i]);
       char* pathname;
       asprintf(&pathname, "%s/%s", directory, dir->d_name);
-      FILE *file = fopen(pathname, "r");
-      node->file = file;
-      node->filename = dir->d_name;
+      node->filename = pathname;
       i++;
     }
   }
@@ -114,7 +113,9 @@ void* threadFunction (void* voidArgs) {
   arg_t* args = (arg_t*) voidArgs;
   for (int i = args->threadNo; i < args->totalNumFiles; i+= NO_THREADS) {
     FileNode_t *cur = &(args->arr)[i];
-    cur->duration = fingerprintFile(cur->file,&cur->fingerprint);
+    char *fingerprint;
+    cur->duration = fingerprintFile(cur->filename,&fingerprint);
+    cur->fingerprint = fingerprint;
   }
   return NULL;
 }
@@ -122,8 +123,6 @@ void* threadFunction (void* voidArgs) {
 int main (int argc, char *argv[]) {
   int totalNumFiles;
   FileNode_t *flacFiles = consumeDirectory(argv[1], &totalNumFiles);
-  char *fingerprint;
-  int duration;
 
   pthread_t threads[NO_THREADS];
   for (int i = 0; i < NO_THREADS; i++) {
