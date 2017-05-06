@@ -155,13 +155,13 @@ Identify and organize audio files within DIRECTORY\n\n\
 }
 
 int main (int argc, char *argv[]) {
-  bool shouldBeInteractive, shouldFingerprint, shouldBeVerbose, shouldRecurse = false;
+  bool shouldBeInteractive, shouldFingerprint, shouldBeVerbose = false;
   int opt;
   while ((opt = getopt(argc, argv, CLI_OPTION_LETTERS)) != -1) {
     switch(opt) {
-      case 'i': shouldBeInteractive = true;
-      case 'f': shouldFingerprint = true;
-      case 'v': shouldBeVerbose = true;
+      case 'i': shouldBeInteractive = true; break;
+      case 'f': shouldFingerprint = true; break;
+      case 'v': shouldBeVerbose = true; break;
     }
   }
   if (optind >= argc) { // No non-option arguments provided
@@ -175,9 +175,11 @@ int main (int argc, char *argv[]) {
     fingerprintFilesInParallel(flacFiles, numFiles);
   }
 
-  for(int i = 0; i < numFiles; i++) {
-    FileNode_t *node = &flacFiles[i];
-    printf("File: %s\n | Duration: %d\n | Fingerprint: %s\n\n",node->filename, node->duration, node->fingerprint);
+  if (shouldBeVerbose) {
+    for(int i = 0; i < numFiles; i++) {
+      FileNode_t *node = &flacFiles[i];
+      printf("File: %s\n | Duration: %d\n | Fingerprint: %s\n\n",node->filename, node->duration, node->fingerprint);
+    }
   }
 
 
