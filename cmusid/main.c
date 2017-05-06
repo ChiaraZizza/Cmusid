@@ -89,6 +89,7 @@ FileNode_t* consumeDirectory(char* directory, int *filecount) {
   DIR *d = opendir(directory);
   struct dirent *dir;
   *filecount = 0;
+  FileNode_t* subDirectoryContents;
   while ((dir = readdir(d)) != NULL) {
     if (strstr(dir->d_name, ".flac") != NULL) {
       (*filecount)++;
@@ -153,25 +154,19 @@ Identify and organize audio files within DIRECTORY\n\n\
   -v, --verbose\t\t use verbose logging\n");
 }
 
-void sanitizeArguments(int argc, char *argv[]) {
-  if (argc < 2) {
-    // No arguments
-    printHelp();
-    exit(EXIT_FAILURE);
-  }
-}
-
 int main (int argc, char *argv[]) {
-  sanitizeArguments(argc, argv);
   bool shouldBeInteractive, shouldFingerprint, shouldBeVerbose, shouldRecurse = false;
   int opt;
   while ((opt = getopt(argc, argv, CLI_OPTION_LETTERS)) != -1) {
     switch(opt) {
       case 'i': shouldBeInteractive = true;
       case 'f': shouldFingerprint = true;
-      case 'r': shouldRecurse = true;
       case 'v': shouldBeVerbose = true;
     }
+  }
+  if (optind >= argc) { // No non-option arguments provided
+    printHelp();
+    exit(EXIT_FAILURE);
   }
   int numFiles;
   FileNode_t *flacFiles = consumeDirectory(argv[optind], &numFiles);
