@@ -4,10 +4,12 @@
 #include <chromaprint.h>
 #include <curl/curl.h>
 #include <dirent.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <pthread.h>
+#include <unistd.h>
 
 typedef struct FileNode {
   char* filename;
@@ -22,6 +24,8 @@ typedef struct arg {
 } arg_t;
 
 #define NO_THREADS 4
+
+const char* CLI_OPTION_LETTERS = "ifrv";
 const int sample_rate = 44100;
 const int num_channels = 2;
 const int FILE_BLOCK_SIZE = 128;
@@ -120,15 +124,12 @@ void* threadFunction (void* voidArgs) {
   return NULL;
 }
 
-int main (int argc, char *argv[]) {
-  int totalNumFiles;
-  FileNode_t *flacFiles = consumeDirectory(argv[1], &totalNumFiles);
-
+void fingerprintFilesInParallel(FileNode_t *files, int numFiles) {
   pthread_t threads[NO_THREADS];
   for (int i = 0; i < NO_THREADS; i++) {
     arg_t *arg = (arg_t*) malloc(sizeof(arg_t));
-    arg->arr = flacFiles;
-    arg->totalNumFiles = totalNumFiles;
+    arg->arr = files;
+    arg->totalNumFiles = numFiles;
     arg->threadNo = i;
     if (pthread_create(&(threads[i]), NULL, threadFunction, arg)) {
       perror("Error creating thread");
@@ -140,9 +141,50 @@ int main (int argc, char *argv[]) {
       exit(2);
     }
   }
-  for(int i = 0; i < totalNumFiles; i++) {
+}
+
+void printHelp() {
+  printf("\
+Usage: cmusid [OPTION]... [DIRECTORY]\n\
+Identify and organize audio files within DIRECTORY\n\n\
+  -i, --interactive\t prompt user for track names, artists, and albums instead of querying AcoustID database\n\
+  -f, --fingerprint\t use Chromaprint library to generate unique fingerprints for each file\n\
+  -r, --recursive\t identify files in subfolders of input directory\n\
+  -v, --verbose\t\t use verbose logging\n");
+}
+
+void sanitizeArguments(int argc, char *argv[]) {
+  if (argc < 2) {
+    // No arguments
+    printHelp();
+    exit(EXIT_FAILURE);
+  }
+}
+
+int main (int argc, char *argv[]) {
+  sanitizeArguments(argc, argv);
+  bool shouldBeInteractive, shouldFingerprint, shouldBeVerbose, shouldRecurse = false;
+  int opt;
+  while ((opt = getopt(argc, argv, CLI_OPTION_LETTERS)) != -1) {
+    switch(opt) {
+      case 'i': shouldBeInteractive = true;
+      case 'f': shouldFingerprint = true;
+      case 'r': shouldRecurse = true;
+      case 'v': shouldBeVerbose = true;
+    }
+  }
+  int numFiles;
+  FileNode_t *flacFiles = consumeDirectory(argv[optind], &numFiles);
+
+  if (shouldFingerprint) {
+    fingerprintFilesInParallel(flacFiles, numFiles);
+  }
+
+  for(int i = 0; i < numFiles; i++) {
     FileNode_t *node = &flacFiles[i];
     printf("File: %s\n | Duration: %d\n | Fingerprint: %s\n\n",node->filename, node->duration, node->fingerprint);
   }
+
+
   return 0;
 }
