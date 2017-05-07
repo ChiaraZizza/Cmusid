@@ -49,7 +49,6 @@ FileNode_t* consumeDirectory(char* directory, int *filecount) {
   DIR *d = opendir(directory);
   struct dirent *dir;
   *filecount = 0;
-  FileNode_t* subDirectoryContents;
   while ((dir = readdir(d)) != NULL) {
     if (strstr(dir->d_name, ".flac") != NULL) {
       (*filecount)++;

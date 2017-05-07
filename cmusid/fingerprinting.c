@@ -14,7 +14,7 @@ int fingerprintFile(char* filePath, char** fingerprint) {
   chromaprint_start(ctx,SAMPLE_RATE,NUM_CHANNELS);
 
  int16_t *buffer = (int16_t*) malloc((FILE_BLOCK_SIZE * sizeof(int16_t)));
-  int samples;
+  int samples = 0;
   int read;
   while ((read = fread(buffer,FILE_BLOCK_SIZE * sizeof(int16_t), 1, file))) {
     if(!chromaprint_feed(ctx,buffer,FILE_BLOCK_SIZE)) {
