@@ -12,13 +12,13 @@
 
 #include "fingerprinting.h"
 
+#define NO_THREADS 4
+
 typedef struct arg {
   FileNode_t* arr;
   int threadNo;
   int totalNumFiles;
 } arg_t;
-
-#define NO_THREADS 4
 
 const char* CLI_OPTION_LETTERS = "ifrv";
 const char* ACOUSTID_API_URL = "http://api.acoustid.org/v2/lookup";
@@ -140,7 +140,6 @@ int main (int argc, char *argv[]) {
       printf("File: %s\n | Duration: %d\n | Fingerprint: %s\n\n",node->filename, node->duration, node->fingerprint);
     }
   }
-
 
   return 0;
 }
