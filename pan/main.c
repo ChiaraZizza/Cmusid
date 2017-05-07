@@ -148,7 +148,8 @@ void practice(FLAC__Metadata_SimpleIterator *flac_iter, bool use) {
 	  FLAC__byte* title = malloc(sizeof(FLAC__byte) * 18);
 	  memcpy(title, "TITLE=A Cool Song", 17);
 	  title[17] = '\0';
-    
+
+	  
 	  for(int i = 0; i < 3; i++) {
 	    t[i].length = 17;
 	    t[i].entry = title;
@@ -157,12 +158,14 @@ void practice(FLAC__Metadata_SimpleIterator *flac_iter, bool use) {
 	  //gdb
 	  //print temp->data.vorbis_comment
 
-	  //fill->comments = t;
 	  temp->data.vorbis_comment.comments = t;
-	  //fill->num_comments = 3;
 	  temp->data.vorbis_comment.num_comments = 3;
 
+	  
+
 	  //memcpy(meta, temp, sizeof(*temp));
+	  FLAC__metadata_object_vorbiscomment_replace_comment(temp, *t, false, false);
+	  
 	  assert(FLAC__metadata_simple_iterator_set_block(flac_iter, temp, false));
 	  meta2 = FLAC__metadata_simple_iterator_get_block(flac_iter);
 	}
