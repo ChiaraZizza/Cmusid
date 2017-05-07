@@ -58,7 +58,7 @@ PROJECT_LOGO           =
 # entered, it will be relative to the location where doxygen was started. If
 # left blank the current directory will be used.
 
-OUTPUT_DIRECTORY       = /home/mitchell17/classes/csc213/project/pan/chromaprint-1.4.2/doc
+OUTPUT_DIRECTORY       = /Users/chiarazizza/CPrograms/CSC213/cmusid/pan/chromaprint-1.4.2/doc
 
 # If the CREATE_SUBDIRS tag is set to YES then doxygen will create 4096 sub-
 # directories (in 2 levels) under the output directory of each output format and
@@ -152,7 +152,7 @@ FULL_PATH_NAMES        = YES
 # will be relative from the directory where doxygen is started.
 # This tag requires that the tag FULL_PATH_NAMES is set to YES.
 
-STRIP_FROM_PATH        = /home/mitchell17/classes/csc213/project/pan/chromaprint-1.4.2/src/
+STRIP_FROM_PATH        = /Users/chiarazizza/CPrograms/CSC213/cmusid/pan/chromaprint-1.4.2/src/
 
 # The STRIP_FROM_INC_PATH tag can be used to strip a user-defined part of the
 # path mentioned in the documentation of a class, which tells the reader which
@@ -771,7 +771,7 @@ WARN_LOGFILE           =
 # spaces. See also FILE_PATTERNS and EXTENSION_MAPPING
 # Note: If this tag is empty the current directory is searched.
 
-INPUT                  = /home/mitchell17/classes/csc213/project/pan/chromaprint-1.4.2/src/chromaprint.h
+INPUT                  = /Users/chiarazizza/CPrograms/CSC213/cmusid/pan/chromaprint-1.4.2/src/chromaprint.h
 
 # This tag can be used to specify the character encoding of the source files
 # that doxygen parses. Internally doxygen uses the UTF-8 encoding. Doxygen uses
