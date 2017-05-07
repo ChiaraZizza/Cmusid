@@ -129,14 +129,16 @@ void practice(FLAC__Metadata_SimpleIterator *flac_iter, bool use) {
   while (FLAC__metadata_simple_iterator_next(flac_iter)) {
     FLAC__StreamMetadata* meta = FLAC__metadata_simple_iterator_get_block(flac_iter);
     FLAC__StreamMetadata* temp = FLAC__metadata_object_new (FLAC__METADATA_TYPE_VORBIS_COMMENT);
+    FLAC__StreamMetadata* meta2;
     printf("meta contents: %u\n", meta->type);
     if(meta->type == FLAC__METADATA_TYPE_VORBIS_COMMENT) {
       FLAC__StreamMetadata_VorbisComment vorbis = meta->data.vorbis_comment;
+      printf("num_comments: %d\n", vorbis.num_comments);
       for(int i = 0; i < vorbis.num_comments; i++) {
 	printf("%s\n", vorbis.comments[i].entry);
 
 
-	FLAC__StreamMetadata_VorbisComment fill = temp->data.vorbis_comment;
+	//FLAC__StreamMetadata_VorbisComment *fill = &(temp->data.vorbis_comment);
 
 	if(use) {
 
@@ -155,14 +157,15 @@ void practice(FLAC__Metadata_SimpleIterator *flac_iter, bool use) {
 	  //gdb
 	  //print temp->data.vorbis_comment
 
-    
-	  fill.comments = t;
-	  fill.num_comments = 3;
+	  //fill->comments = t;
+	  temp->data.vorbis_comment.comments = t;
+	  //fill->num_comments = 3;
+	  temp->data.vorbis_comment.num_comments = 3;
 
+	  //memcpy(meta, temp, sizeof(*temp));
 	  assert(FLAC__metadata_simple_iterator_set_block(flac_iter, temp, false));
-	  FLAC__StreamMetadata* meta2 = FLAC__metadata_simple_iterator_get_block(flac_iter);
+	  meta2 = FLAC__metadata_simple_iterator_get_block(flac_iter);
 	}
-
       }
     }
 
