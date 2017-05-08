@@ -4,10 +4,15 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <pthread.h>
+
+#include "fingerprinting.h"
 
 #define SAMPLE_RATE 44100
 #define NUM_CHANNELS 2
+
 #define MAX_DURATION 120
+#define NUM_THREADS 4
 
 long long int streamRemaining = MAX_DURATION * SAMPLE_RATE;
 
@@ -92,3 +97,44 @@ fingerprintFile (char *filePath, char **fingerprint)
   chromaprint_free (ctx);
   return -1;
 }
+
+/**
+ * A pthread compatible function which expects an arg_t.
+ */
+void *
+fingerprintThread (void *voidArgs)
+{
+  arg_t *args = (arg_t *) voidArgs;
+  for (int i = args->threadNo; i < args->totalNumFiles; i += NUM_THREADS)
+    {
+      FileNode_t *cur = &(args->arr)[i];
+      cur->duration = fingerprintFile (cur->filename, &(cur->fingerprint));
+    }
+  return NULL;
+}
+
+void
+fingerprintFilesInParallel (FileNode_t * files, int numFiles)
+{
+  pthread_t threads[NUM_THREADS];
+  for (int i = 0; i < NUM_THREADS; i++)
+    {
+      arg_t *arg = (arg_t *) malloc (sizeof (arg_t));
+      arg->arr = files;
+      arg->totalNumFiles = numFiles;
+      arg->threadNo = i;
+      if (pthread_create (&(threads[i]), NULL, fingerprintThread, arg))
+	{
+	  perror ("Error creating thread");
+	}
+    }
+  for (int i = 0; i < NUM_THREADS; i++)
+    {
+      if (pthread_join (threads[i], 0))
+	{
+	  perror ("Error joining with thread");
+	  exit (2);
+	}
+    }
+}
+

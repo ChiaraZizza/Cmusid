@@ -6,9 +6,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <pthread.h>
-#include <stdbool.h>
-#include <FLAC/metadata.h>
 #include <unistd.h>
 
 #include "fingerprinting.h"
@@ -16,20 +13,16 @@
 
 #define NO_THREADS 4
 
-typedef struct arg
-{
-  FileNode_t *arr;
-  int threadNo;
-  int totalNumFiles;
-} arg_t;
-
-typedef FLAC__StreamMetadata data;
-
 const char *CLI_OPTION_LETTERS = "ifrv";
 
+/**
+ * \brief Steps through the directory at the given path string and returns an array of FileNodes
+ *    which represent its contents
+ */
 FileNode_t *
 consumeDirectory (char *directory, int *filecount)
 {
+  // First we step through the directory to count the number of flac files
   DIR *d = opendir (directory);
   struct dirent *dir;
   *filecount = 0;
@@ -42,6 +35,7 @@ consumeDirectory (char *directory, int *filecount)
     }
   closedir (d);
 
+  // Now we'll step through the directory and parse the flac files into our ledger array
   int i = 0;
   d = opendir (directory);
   FileNode_t *flacFiles = malloc (sizeof (FileNode_t) * (*filecount));
@@ -50,31 +44,19 @@ consumeDirectory (char *directory, int *filecount)
       if (strstr (dir->d_name, ".flac") != NULL)
 	{
 	  FileNode_t *node = &(flacFiles[i]);
-	  char *pathname;
-	  asprintf (&pathname, "%s/%s", directory, dir->d_name);
-	  node->filename = pathname;
+	  asprintf (&node->filename, "%s/%s", directory, dir->d_name);
 	  i++;
 	}
     }
+  closedir (d);
   assert (*filecount == i);
 
   return flacFiles;
 }
 
-void *
-threadFunction (void *voidArgs)
-{
-  arg_t *args = (arg_t *) voidArgs;
-  for (int i = args->threadNo; i < args->totalNumFiles; i += NO_THREADS)
-    {
-      FileNode_t *cur = &(args->arr)[i];
-      char *fingerprint;
-      cur->duration = fingerprintFile (cur->filename, &fingerprint);
-      cur->fingerprint = fingerprint;
-    }
-  return NULL;
-}
-
+/**
+ * Prints program usage instructions
+ */
 void
 printHelp ()
 {
@@ -87,30 +69,6 @@ Identify and organize audio files within DIRECTORY\n\n\
   -v, --verbose\t\t use verbose logging (you'll want to pipe to `less`)\n");
 }
 
-void
-fingerprintFilesInParallel (FileNode_t * files, int numFiles)
-{
-  pthread_t threads[NO_THREADS];
-  for (int i = 0; i < NO_THREADS; i++)
-    {
-      arg_t *arg = (arg_t *) malloc (sizeof (arg_t));
-      arg->arr = files;
-      arg->totalNumFiles = numFiles;
-      arg->threadNo = i;
-      if (pthread_create (&(threads[i]), NULL, threadFunction, arg))
-	{
-	  perror ("Error creating thread");
-	}
-    }
-  for (int i = 0; i < NO_THREADS; i++)
-    {
-      if (pthread_join (threads[i], 0))
-	{
-	  perror ("Error joining with thread");
-	  exit (2);
-	}
-    }
-}
 
 int
 main (int argc, char *argv[])
