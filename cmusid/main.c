@@ -13,6 +13,7 @@
 #include <unistd.h>
 
 #include "fingerprinting.h"
+#include "flac.h"
 
 #define NO_THREADS 4
 
@@ -190,5 +191,6 @@ main (int argc, char *argv[])
 	}
     }
 
+  test("title1", "artist1", "album1", "input/cool.flac");
   return 0;
 }

@@ -5,7 +5,7 @@
 #include <string.h>
 
 void
-practice (FLAC__Metadata_SimpleIterator * flac_iter, bool use, char *title,
+renameVorbis (FLAC__Metadata_SimpleIterator * flac_iter, bool use, char *title,
 	  char *album, char *artist)
 {
 
@@ -88,11 +88,13 @@ practice (FLAC__Metadata_SimpleIterator * flac_iter, bool use, char *title,
   printf ("Hello\n");
 }
 
-void test() {
-  char *title = "TITLE=Keep My Cool";
+void test(char* title, char* artist, char* album, char* old_filename) {
+/*  char *title = "TITLE=Keep My Cool";
   char *artist = "ARTIST=the Wellness";
   char *album = "ALBUM=doubles";
+  */
 
+    // make an iterator to go through the FLAC's metadata
   FLAC__Metadata_SimpleIterator *flac_iter =
     FLAC__metadata_simple_iterator_new ();
 
@@ -114,7 +116,7 @@ void test() {
 
 
   printf ("First time running:\n");
-  practice (flac_iter, true, title, album, artist);
+  renameVorbis (flac_iter, true, title, album, artist);
   FLAC__metadata_simple_iterator_delete (flac_iter);
 
 
@@ -140,7 +142,14 @@ void test() {
     }
 
 
+    //FILE WRITING
+
+    //name for new filename
+   char* new_filename = (char*) malloc(sizeof(char*) * 100);
+   //sprintf(new_filename, "%s-%s-%s.flac", artist, album, title);
+
+  // check to ensure that the vorbis comments were written correctly
   printf ("\nSecond time running:\n");
-  practice (flac_iter2, false, title, album, artist);
+  renameVorbis (flac_iter2, false, title, album, artist);
 
 }
