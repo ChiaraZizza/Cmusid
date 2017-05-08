@@ -1,7 +1,6 @@
 #define _GNU_SOURCE
 
 #include <assert.h>
-#include <curl/curl.h>
 #include <dirent.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -13,11 +12,13 @@
 #include <unistd.h>
 
 #include "fingerprinting.h"
+#include "metadata.h"
 
 #define NO_THREADS 4
 
-typedef struct arg {
-  FileNode_t* arr;
+typedef struct arg
+{
+  FileNode_t *arr;
   int threadNo;
   int totalNumFiles;
 } arg_t;
@@ -27,36 +28,6 @@ typedef FLAC__StreamMetadata data;
 #define NO_THREADS 4
 
 const char *CLI_OPTION_LETTERS = "ifrv";
-const char *ACOUSTID_API_URL = "http://api.acoustid.org/v2/lookup";
-const char *APPLICATION_ID = "jif76R78Wd";
-
-void
-fetchMetadata (char *fingerprint, int duration)
-{
-  printf ("Fetching Metadata...\n | Duration: %d\n | Fingerprint: %s\n",
-	  duration, fingerprint);
-  CURL *curl = curl_easy_init ();
-  if (curl)
-    {
-      CURLcode res;
-      curl_easy_setopt (curl, CURLOPT_URL, ACOUSTID_API_URL);
-      char *body;
-      asprintf (&body, "client=%s&duration=%d&fingerprint=%s", APPLICATION_ID,
-		duration, fingerprint);
-      curl_easy_setopt (curl, CURLOPT_POSTFIELDS, body);
-
-      res = curl_easy_perform (curl);
-      if (res != CURLE_OK)
-	fprintf (stderr, "curl_easy_perform() failed: %s\n",
-		 curl_easy_strerror (res));
-      curl_easy_cleanup (curl);
-      free (body);
-    }
-  else
-    {
-      fprintf (stderr, "Error Initializing cURL");
-    }
-}
 
 FileNode_t *
 consumeDirectory (char *directory, int *filecount)
@@ -144,9 +115,6 @@ fingerprintFilesInParallel (FileNode_t * files, int numFiles)
     }
 }
 
-
-// RUN BEFORE EVERY CALL
-//!git checkout input/cool.flac
 int
 main (int argc, char *argv[])
 {
