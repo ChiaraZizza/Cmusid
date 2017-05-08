@@ -7,12 +7,21 @@
 
 #define SAMPLE_RATE 44100
 #define NUM_CHANNELS 2
+#define MAX_DURATION 120
+
+long long int streamRemaining = MAX_DURATION * SAMPLE_RATE;
 
 FLAC__StreamDecoderWriteStatus processFrame(const FLAC__StreamDecoder *decoder, const FLAC__Frame *frame, const FLAC__int32 *const buffer[], void* context) {
   int channels = frame->header.channels;
 
-  if(!chromaprint_feed(context,buffer,SAMPLE_RATE*channels)) {
+  streamRemaining -= frame->header.blocksize;
+
+  // Endianness?
+  if(!chromaprint_feed(context,buffer,frame->header.sample_rate*channels)) {
     fprintf(stderr, "Error feeding Chromaprint from buffer\n");
+    return FLAC__STREAM_DECODER_WRITE_STATUS_ABORT;
+  }
+  if (streamRemaining < 0) {
     return FLAC__STREAM_DECODER_WRITE_STATUS_ABORT;
   }
   return FLAC__STREAM_DECODER_WRITE_STATUS_CONTINUE;
@@ -42,7 +51,8 @@ int fingerprintFile(char* filePath, char** fingerprint) {
   }
 
   if (!FLAC__stream_decoder_process_until_end_of_stream(decoder)) {
-    if (!(FLAC__stream_decoder_get_state(decoder) == FLAC__STREAM_DECODER_END_OF_STREAM)) {
+     FLAC__StreamDecoderState state = FLAC__stream_decoder_get_state(decoder); 
+    if (!(state == FLAC__STREAM_DECODER_END_OF_STREAM || state == FLAC__STREAM_DECODER_ABORTED)) {
       exit(2);
     }
   }
