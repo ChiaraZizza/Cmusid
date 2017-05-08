@@ -88,7 +88,9 @@ practice (FLAC__Metadata_SimpleIterator * flac_iter, bool use, char *title,
   printf ("Hello\n");
 }
 
-void test() {
+void
+test ()
+{
   char *title = "TITLE=Keep My Cool";
   char *artist = "ARTIST=the Wellness";
   char *album = "ALBUM=doubles";

@@ -25,8 +25,6 @@ typedef struct arg
 
 typedef FLAC__StreamMetadata data;
 
-#define NO_THREADS 4
-
 const char *CLI_OPTION_LETTERS = "ifrv";
 
 FileNode_t *
@@ -76,7 +74,6 @@ threadFunction (void *voidArgs)
     }
   return NULL;
 }
-
 
 void
 printHelp ()
