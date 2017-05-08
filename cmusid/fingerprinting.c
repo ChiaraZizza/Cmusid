@@ -14,6 +14,13 @@
 #define MAX_DURATION 120
 #define NUM_THREADS 4
 
+typedef struct arg
+{
+  FileNode_t *arr;
+  int threadNo;
+  int totalNumFiles;
+} arg_t;
+
 long long int streamRemaining = MAX_DURATION * SAMPLE_RATE;
 
 FLAC__StreamDecoderWriteStatus
