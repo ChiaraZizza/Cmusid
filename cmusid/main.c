@@ -11,8 +11,6 @@
 #include "fingerprinting.h"
 #include "metadata.h"
 
-#define NO_THREADS 4
-
 const char *CLI_OPTION_LETTERS = "ifrv";
 
 /**
@@ -108,8 +106,8 @@ main (int argc, char *argv[])
       for (int i = 0; i < numFiles; i++)
 	{
 	  FileNode_t *node = &flacFiles[i];
-	  printf ("File: %s\n | Duration: %d\n | Fingerprint: %s\n\n",
-		  node->filename, node->duration, node->fingerprint);
+	  printf ("File: %s\n | Fingerprint: %s\n\n",
+		  node->filename,node->fingerprint);
 	}
     }
 
