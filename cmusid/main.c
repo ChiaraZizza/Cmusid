@@ -91,7 +91,7 @@ Identify and organize audio files within DIRECTORY\n\n\
   -i, --interactive\t prompt user for track names, artists, and albums instead of querying AcoustID database\n\
   -f, --fingerprint\t use Chromaprint library to generate unique fingerprints for each file\n\
   -r, --recursive\t identify files in subfolders of input directory\n\
-  -v, --verbose\t\t use verbose logging\n");
+  -v, --verbose\t\t use verbose logging (you'll want to pipe to `less`)\n");
 }
 
 void fingerprintFilesInParallel(FileNode_t *files, int numFiles) {
