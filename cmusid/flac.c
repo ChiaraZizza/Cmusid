@@ -1,8 +1,12 @@
+#include "flac.h"
+
 #include <assert.h>
 #include <FLAC/metadata.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
+
+#define MAX_METADATA_LENGTH 100
 
 void renameVorbis (FLAC__Metadata_SimpleIterator * flac_iter, char *title,
         char *album, char *artist)
@@ -131,4 +135,26 @@ modifyFile(char* title, char* artist, char* album, char* old_filename)
 
     // Rename File
     renameFile(old_filename, title, album, artist);
+}
+
+void interactivelyRenameFiles(FileNode_t *files, int fileCount) {
+  for (int i = 0; i < fileCount; i++) {
+    FileNode_t *node = &files[i];
+    printf("File: %s\n", node->filename);
+    printf(" | Duration: %d:%d\n", node->duration / 60, node->duration % 60);
+    if (node->fingerprint) {
+      printf(" | Fingerprint: %s\n", node->fingerprint);
+    }
+    char artist[MAX_METADATA_LENGTH];
+    char album[MAX_METADATA_LENGTH];
+    char tracktitle[MAX_METADATA_LENGTH];
+    printf("\nTrack Name: ");
+    scanf("%s",tracktitle);
+    printf("\nAlbum Name: ");
+    scanf("%s",album);
+    printf("\nArtist Name: ");
+    scanf("%s",artist);
+
+    modifyFile(tracktitle, artist, album, node->filename);
+  }
 }

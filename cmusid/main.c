@@ -8,6 +8,7 @@
 #include <string.h>
 #include <unistd.h>
 
+#include "flac.h"
 #include "fingerprinting.h"
 #include "metadata.h"
 
@@ -102,6 +103,10 @@ main (int argc, char *argv[])
     {
       fingerprintFilesInParallel (flacFiles, numFiles);
     }
+
+  if (shouldBeInteractive) {
+    interactivelyRenameFiles(flacFiles,numFiles);
+  }
 
   if (shouldBeVerbose)
     {
