@@ -85,7 +85,7 @@ practice (FLAC__Metadata_SimpleIterator * flac_iter, bool use, char *title,
 
 void renameFile(char* old_filename, char* title, char* album, char* artist) {
     // generates new filename string
-    int tlen, alen, arlen, ret;
+    int tlen, alen, arlen;
     tlen = strlen(title);
     alen = strlen(album);
     arlen = strlen(artist);
@@ -97,8 +97,9 @@ void renameFile(char* old_filename, char* title, char* album, char* artist) {
     //ret = rename(old_filename, new);
     char* buffer = (char*) malloc(sizeof(char) * new_len * new_len);
     snprintf(buffer, new_len*new_len, "mv %s %s", old_filename, new);
-    int status = system(buffer);
+    assert(system(buffer)==0);
 
+    // free created strings
     free(new);
     free(buffer);
 }
@@ -135,6 +136,8 @@ test (char* title, char* artist, char* album, char* old_filename)
 
   printf ("\nSecond time running:\n");
   practice (flac_iter, false, title, album, artist);
+
+  FLAC__metadata_simple_iterator_delete(flac_iter);
 
   // Rename File
   renameFile(old_filename, title, album, artist);
