@@ -141,7 +141,9 @@ void interactivelyRenameFiles(FileNode_t *files, int fileCount) {
   for (int i = 0; i < fileCount; i++) {
     FileNode_t *node = &files[i];
     printf("File: %s\n", node->filename);
-    printf(" | Duration: %d:%d\n", node->duration / 60, node->duration % 60);
+    if (node->duration) {
+      printf(" | Duration: %d:%d\n", node->duration / 60, node->duration % 60);
+    }
     if (node->fingerprint) {
       printf(" | Fingerprint: %s\n", node->fingerprint);
     }
