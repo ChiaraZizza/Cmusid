@@ -71,7 +71,9 @@ Identify and organize audio files within DIRECTORY\n\n\
 int
 main (int argc, char *argv[])
 {
-  bool shouldBeInteractive, shouldFingerprint, shouldBeVerbose = false;
+  bool shouldBeInteractive = false;
+  bool shouldFingerprint = false;
+  bool shouldBeVerbose = false;
   int opt;
   while ((opt = getopt (argc, argv, CLI_OPTION_LETTERS)) != -1)
     {
@@ -111,5 +113,6 @@ main (int argc, char *argv[])
 	}
     }
 
+  free(flacFiles);
   return 0;
 }
