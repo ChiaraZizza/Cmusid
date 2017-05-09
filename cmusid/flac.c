@@ -68,6 +68,7 @@ void renameVorbis (FLAC__Metadata_SimpleIterator * flac_iter, char *title,
                 FLAC__metadata_object_vorbiscomment_replace_comment (temp, *new_entry, false, true);
                 assert (FLAC__metadata_simple_iterator_set_block
                         (flac_iter, temp, true));
+                return;
             }
         }
     }
