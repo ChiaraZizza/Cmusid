@@ -107,6 +107,14 @@ void renameFile(char* old_filename, char* title, char* album, char* artist) {
 void
 test (char* title, char* artist, char* album, char* old_filename)
 {
+
+    // Check if old_filename is a valid path
+    FILE *file = fopen(old_filename, "r");
+    if (file == NULL) {
+        fprintf(stderr, "%s\n", "Please give a valid filepath: FLAC files should be in the 'input' directory.");
+        exit(2);
+    }
+  fclose(file);
   FLAC__Metadata_SimpleIterator *flac_iter =
     FLAC__metadata_simple_iterator_new ();
 
