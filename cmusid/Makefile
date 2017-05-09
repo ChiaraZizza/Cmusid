@@ -1,7 +1,7 @@
 PROJECT = cmusid
 VERSION = 0.1
 
-CC = clang
+CC = clang #-fsanitize=address
 
 HEADERS = fingerprinting.h flac.h metadata.h
 SOURCES = main.c fingerprinting.c flac.c metadata.h

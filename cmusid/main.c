@@ -9,12 +9,13 @@
 #include <unistd.h>
 
 #include "fingerprinting.h"
+#include "flac.h"
 #include "metadata.h"
 
 #define NO_THREADS 4
 
 const char *CLI_OPTION_LETTERS = "ifrv";
-
+const 
 /**
  * \brief Steps through the directory at the given path string and returns an array of FileNodes
  *    which represent its contents
@@ -73,6 +74,7 @@ Identify and organize audio files within DIRECTORY\n\n\
 int
 main (int argc, char *argv[])
 {
+    /*
   bool shouldBeInteractive, shouldFingerprint, shouldBeVerbose = false;
   int opt;
   while ((opt = getopt (argc, argv, CLI_OPTION_LETTERS)) != -1)
@@ -112,6 +114,10 @@ main (int argc, char *argv[])
 		  node->filename, node->duration, node->fingerprint);
 	}
     }
-
+    */
+    char title[] = "TITLE=title6";
+    char artist[] = "ARTIST=artist6";
+    char album[] = "ALBUM=album6";
+    test(title, artist, album, "input/cool.flac");
   return 0;
 }
