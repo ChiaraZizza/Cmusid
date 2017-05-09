@@ -88,14 +88,14 @@ fingerprintFile (char *filePath, char **fingerprint)
   if (FLAC__stream_decoder_init_file
       (decoder, filePath, processFrame, NULL, processError, ctx) != 0)
     {
-      fprintf (stderr, "Error initializing libFlac decoder. State: %d\n",
-	       FLAC__stream_decoder_get_state (decoder));
+      fprintf (stderr, "Error initializing libFlac decoder. State: %s\n",
+	       FLAC__stream_decoder_get_resolved_state_string (decoder));
       exit (2);
     }
   if (!FLAC__stream_decoder_process_until_end_of_metadata (decoder))
     {
-      fprintf (stderr, "Error processing metadata with libFlac. State: %d\n",
-	       FLAC__stream_decoder_get_state (decoder));
+      fprintf (stderr, "Error processing metadata with libFlac. State: %s\n",
+	       FLAC__stream_decoder_get_resolved_state_string (decoder));
       exit (2);
     }
 

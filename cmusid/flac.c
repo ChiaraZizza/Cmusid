@@ -1,3 +1,4 @@
+#define _GNU_SOURCE
 #include "flac.h"
 
 #include <assert.h>
@@ -76,23 +77,18 @@ void renameVorbis (FLAC__Metadata_SimpleIterator * flac_iter, char *title,
 
 void renameFile(char* old_filename, char* title, char* album, char* artist) {
     // generates new filename string
-    int tlen, alen, arlen;
-    tlen = strlen(title);
-    alen = strlen(album);
-    arlen = strlen(artist);
-    int new_len = tlen+alen+arlen + 16;
-    char* new = malloc (sizeof(char)*new_len);
-    snprintf(new, new_len, "input/%s--%s--%s.flac", artist, album, title);
+    char* new_filename;
+    asprintf(&new_filename, "input/%s--%s--%s.flac", artist, album, title);
 
     // rename file
     //ret = rename(old_filename, new);
-    char* buffer = (char*) malloc(sizeof(char) * new_len * new_len);
-    snprintf(buffer, new_len*new_len, "mv \"%s\" \"%s\"", old_filename, new);
-    assert(system(buffer)==0);
+    char *moveCommand;
+    asprintf(&moveCommand,  "mv \"%s\" \"%s\"", old_filename, new_filename);
+    assert(system(moveCommand)==0);
 
     // free created strings
-    free(new);
-    free(buffer);
+    free(moveCommand);
+    free(new_filename);
 }
 
     void
@@ -151,12 +147,16 @@ void interactivelyRenameFiles(FileNode_t *files, int fileCount) {
     char artist[MAX_METADATA_LENGTH];
     char album[MAX_METADATA_LENGTH];
     char tracktitle[MAX_METADATA_LENGTH];
-    printf("\nTrack Name: ");
-    scanf("%s",tracktitle);
-    printf("\nAlbum Name: ");
-    scanf("%s",album);
-    printf("\nArtist Name: ");
-    scanf("%s",artist);
+    printf("\nNew Track Name: ");
+    fgets(tracktitle, MAX_METADATA_LENGTH, stdin);
+    printf("\nNew Album Name: ");
+    fgets(album, MAX_METADATA_LENGTH, stdin);
+    printf("\nNew Artist Name: ");
+    fgets(artist, MAX_METADATA_LENGTH, stdin);
+
+    artist[strcspn(artist, "\n")] = 0;
+    album[strcspn(album, "\n")] = 0;
+    tracktitle[strcspn(tracktitle, "\n")] = 0;
 
     modifyFile(tracktitle, artist, album, node->filename);
   }
