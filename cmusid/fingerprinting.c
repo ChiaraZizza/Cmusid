@@ -25,6 +25,9 @@ typedef struct arg
 /// We will only fingerprint the first MAX_DURATION seconds
 long long int streamRemaining = MAX_DURATION * SAMPLE_RATE;
 
+/// But we still need to find the entire file's duration
+long long int streamLength = 0;
+
 /**
  * A data-read function for libFLAC which feeds into the Chromaprint context given
  */
@@ -33,19 +36,24 @@ processFrame (const FLAC__StreamDecoder * decoder, const FLAC__Frame * frame,
 	      const FLAC__int32 * const buffer[], void *context)
 {
   int channels = frame->header.channels;
+  int samples = frame->header.blocksize;
 
-  streamRemaining -= frame->header.blocksize;
+  streamRemaining -= samples;
+  streamLength += samples;
 
+  int16_t shortBuffer[samples * channels];
+
+  for (int channel = 0; channel < channels; channel++) {
+    for (int sample = 0; sample < samples; sample++) {
+      shortBuffer[(sample * channels) + channel] = (int16_t) buffer[channel][sample];
+    }
+  }
   // Endianness?
-  if (!chromaprint_feed
-      (context, buffer, frame->header.sample_rate * channels))
+  if ((streamRemaining > 0) && !chromaprint_feed
+      (context, shortBuffer, samples * channels))
     {
       fprintf (stderr, "Error feeding Chromaprint from libFLAC buffer\n");
       exit (2);
-    }
-  if (streamRemaining < 0)
-    {
-      return FLAC__STREAM_DECODER_WRITE_STATUS_ABORT;
     }
   return FLAC__STREAM_DECODER_WRITE_STATUS_CONTINUE;
 }
@@ -97,8 +105,7 @@ fingerprintFile (char *filePath, char **fingerprint)
       FLAC__StreamDecoderState state =
 	FLAC__stream_decoder_get_state (decoder);
       // It is normal if we reach the end of stream or if we aborted
-      if (!(state == FLAC__STREAM_DECODER_END_OF_STREAM ||
-	    state == FLAC__STREAM_DECODER_ABORTED))
+      if (!(state == FLAC__STREAM_DECODER_END_OF_STREAM))
 	{
 	  fprintf (stderr, "Error decoding FLAC stream: %d\n", state);
 	}
@@ -121,7 +128,7 @@ fingerprintFile (char *filePath, char **fingerprint)
     }
   chromaprint_free (ctx);
   FLAC__stream_decoder_delete(decoder);
-  return -1;
+  return streamLength / 44100;
 }
 
 /**
