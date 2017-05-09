@@ -84,13 +84,23 @@ practice (FLAC__Metadata_SimpleIterator * flac_iter, bool use, char *title,
 }
 
 void renameFile(char* old_filename, char* title, char* album, char* artist) {
-    int tlen, alen, arlen;
+    // generates new filename string
+    int tlen, alen, arlen, ret;
     tlen = strlen(title);
     alen = strlen(album);
     arlen = strlen(artist);
-    int new_len = tlen+alen+arlen + 10;
+    int new_len = tlen+alen+arlen + 16;
     char* new = malloc (sizeof(char)*new_len);
-    snprintf(new, new_len, "%s--%s--%s.flac", artist, album, title);
+    snprintf(new, new_len, "input/%s--%s--%s.flac", artist, album, title);
+
+    // rename file
+    //ret = rename(old_filename, new);
+    char* buffer = (char*) malloc(sizeof(char) * new_len * new_len);
+    snprintf(buffer, new_len*new_len, "mv %s %s", old_filename, new);
+    int status = system(buffer);
+
+    free(new);
+    free(buffer);
 }
 
 void
