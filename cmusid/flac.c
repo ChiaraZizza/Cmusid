@@ -87,7 +87,7 @@ void renameFile(char* old_filename, char* title, char* album, char* artist) {
     // rename file
     //ret = rename(old_filename, new);
     char* buffer = (char*) malloc(sizeof(char) * new_len * new_len);
-    snprintf(buffer, new_len*new_len, "mv %s %s", old_filename, new);
+    snprintf(buffer, new_len*new_len, "mv \"%s\" \"%s\"", old_filename, new);
     assert(system(buffer)==0);
 
     // free created strings
