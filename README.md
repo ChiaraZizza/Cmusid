@@ -4,13 +4,14 @@
 * If libChromaprint is not installed on your system, don't worry! We've included the entirety of the library. Just run `export LD_LIBRARY_PATH=chromaprint-1.4.2/src` after you've `cmake`d and `make`d in the `chromaprint-1.4.2` directory.
 
 ## Usage
+The cmusid program reads in .flac files and sends them to the acoustid database to be fingerprinted (using -f), if possible. If not, the user can use the interactive mode (-i) to provide file details like Artist, Album, and Song Title which are used to rename the file appropriately. Interactive and fingerprinting modes can both modify the .flac file's Vorbis comment, storing the Artist, Album, and Song Title. These comments can be used by media players like VLC to identify a FLAC file and display the correct information. With this basic information gleaned from either a correct fingerprint or user, our program renames files using the following format: "<artist>--<album>--<song-title>.flac"
+
 ```
 Usage: cmusid [OPTION]... [DIRECTORY]
 Identify and organize audio files within DIRECTORY
 
   -i, --interactive  prompt user for track names, artists, and albums instead of querying AcoustID database
   -f, --fingerprint  use Chromaprint library to generate unique fingerprints for each file
-  -r, --recursive  identify files in subfolders of input directory
   -v, --verbose    use verbose logging (you'll want to pipe to `less`)
 ```
 
